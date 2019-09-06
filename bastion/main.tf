@@ -21,7 +21,7 @@ resource "aws_iam_instance_profile" "this" {
 }
 
 data "template_file" "this" {
-  template = file("${path.module}/policies/s3_read_objects_policy.json")
+  template = file("${path.module}/../policies/s3_read_objects_policy.json")
   vars = {
     bucket = var.bucket
   }
