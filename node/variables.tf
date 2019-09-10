@@ -9,3 +9,4 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "log_bucket" {}
