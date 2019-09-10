@@ -22,28 +22,22 @@ resource "aws_iam_instance_profile" "this" {
 
 data "template_file" "ebs_mount_policy" {
   template = file("${path.module}/../policies/ebs_mount_policy.json")
-  // TODO: IAM lockdown
-  vars = {
-
-  }
-}
-
-data "template_file" "this" {
-  template = file("${path.module}/../policies/ebs_mount_policy.json")
-  //TODO: IAM lockdown
-  vars = {
-    //    file_system_id = data.terraform_remote_state.efs.outputs.file_system_id
-    //    account_id     = data.aws_caller_identity.this.account_id
-    //    region         = data.aws_region.current.name
-  }
+  vars = {}
 }
 
 data "template_file" "cloudwatch_write_policy" {
   template = file("${path.module}/../policies/cloudwatch_write_policy.json")
-  //TODO: IAM lockdown
   vars = {
     log_bucket = var.log_bucket
     log_config_bucket = data.aws_caller_identity.this.account_id
+  }
+}
+
+data "template_file" "s3_read_objects_policy" {
+  template = file("${path.module}/../policies/s3_read_objects_policy.json")
+  //TODO: IAM lockdown
+  vars = {
+    bucket = var.log_bucket
   }
 }
 
@@ -57,19 +51,14 @@ name = "${title(local.name)}CloudwatchWritePolicy"
 policy = data.template_file.cloudwatch_write_policy.rendered
 }
 
+resource "aws_iam_policy" "s3_read_objects_policy" {
+name = "${title(local.name)}S3ReadObjectsPolicy"
+policy = data.template_file.cloudwatch_write_policy.rendered
+}
+
 resource "aws_iam_role_policy_attachment" "ebs_mount_policy" {
   role = aws_iam_role.this.name
   policy_arn = aws_iam_policy.ebs_mount_policy.arn
-}
-
-resource "aws_iam_policy" "this" {
-name = "${title(local.name)}EBSPolicy"
-policy = data.template_file.this.rendered
-}
-
-resource "aws_iam_role_policy_attachment" "this" {
-role = aws_iam_role.this.name
-policy_arn = aws_iam_policy.this.arn
 }
 
 resource "aws_iam_role_policy_attachment" "cloudwatch_write_policy" {
@@ -77,8 +66,13 @@ role = aws_iam_role.this.name
 policy_arn = aws_iam_policy.cloudwatch_write_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "s3_read_objects_policy" {
+role = aws_iam_role.this.name
+policy_arn = aws_iam_policy.cloudwatch_write_policy.arn
+}
+
 resource "aws_iam_role" "this" {
-name = "${title(local.name)}EFSRole"
+name = "${title(local.name)}Role"
 assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

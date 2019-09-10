@@ -10,3 +10,4 @@ variable "tags" {
 }
 
 variable "log_bucket" {}
+
